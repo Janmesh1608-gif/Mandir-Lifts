@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mandir Lifts Optimizer</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --saffron: #E07B2A;
+  --saffron-light: #FDF3EA;
+  --saffron-mid: #F0AD72;
+  --teal: #0D6B54;
+  --teal-light: #E0F4EE;
+  --teal-mid: #1A9E75;
+  --red: #B83030;
+  --red-light: #FDEAEA;
+  --ink: #1E1C1A;
+  --ink-2: #4A4845;
+  --ink-3: #888580;
+  --border: #E2DFDA;
+  --bg: #F9F7F4;
+  --white: #FFFFFF;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header h1 { font-size: 18px; font-weight: 700; }
+.header p { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.start-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.start-section label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
+
+.start-section input {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 15px;
+  width: 180px;
+  text-transform: uppercase;
+  font-family: 'SF Mono', monospace;
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.start-section input:focus { border-color: var(--saffron); }
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .panels { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-icon { font-size: 18px; }
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 130px 36px;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  animation: slideIn 0.18s ease;
+}
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; } }
+
+.row input, .row select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.row input:focus, .row select:focus { border-color: var(--saffron); }
+.row input.postcode { text-transform: uppercase; font-family: monospace; letter-spacing: 0.04em; }
+
+.row.error { border-color: #F0BEBE; background: var(--red-light); }
+.row.error input { border-color: var(--red); }
+
+.error-msg {
+  display: none;
+  font-size: 10px;
+  color: var(--red);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.row.error .error-msg { display: block; }
+
+.btn-del {
+  width: 30px; height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink-3);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.1s;
+  line-height: 1;
+}
+
+.btn-del:hover { background: var(--red-light); color: var(--red); border-color: #F0BEBE; }
+
+.btn-add {
+  width: 100%;
+  border: 1.5px dashed var(--saffron-mid);
+  background: var(--saffron-light);
+  color: var(--saffron);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.btn-add:hover { background: #FAEBD8; }
+
+.action-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn-optimize {
+  flex: 1;
+  background: var(--saffron);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-shadow: 0 2px 8px rgba(224,123,42,0.25);
+}
+
+.btn-optimize:hover { background: #C96E22; }
+.btn-optimize:disabled { background: var(--border); cursor: not-allowed; }
+
+.btn-reset {
+  padding: 14px 20px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.btn-reset:hover { background: var(--bg); }
+
+.status {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.status.visible { display: flex; }
+.status.error { border-color: #F0BEBE; background: var(--red-light); color: var(--red); }
+.status.success { border-color: #9FE1CB; background: var(--teal-light); color: var(--teal); }
+
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.results {
+  margin-top: 20px;
+}
+
+.results-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.stat strong { display: block; font-size: 18px; color: var(--ink); margin-bottom: 2px; }
+
+.routes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.driver-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.driver-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--saffron-light);
+  color: var(--saffron);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.driver-info { flex: 1; }
+.driver-name { font-weight: 700; font-size: 15px; }
+.driver-home { font-size: 12px; color: var(--ink-3); margin-top: 1px; }
+
+.seats-badge {
+  background: var(--teal-light);
+  color: var(--teal);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.seats-badge.full { background: var(--saffron-light); color: var(--saffron); }
+
+.trip-label {
+  display: inline-block;
+  background: var(--saffron-light);
+  color: var(--saffron);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.stops {
+  padding: 12px 16px;
+}
+
+.stop {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bg);
+  font-size: 13px;
+}
+
+.stop:last-child { border-bottom: none; }
+
+.stop-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--saffron-light);
+  color: var(--saffron);
+  font-weight: 700;
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.stop-start { background: var(--teal-light); color: var(--teal); }
+.stop-end { background: var(--teal-light); color: var(--teal); font-size: 14px; }
+
+.stop-text { flex: 1; }
+.stop-name { font-weight: 600; }
+.stop-pc { font-size: 11px; color: var(--ink-3); font-family: monospace; margin-top: 2px; }
+
+.maps-btn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px 12px;
+  padding: 8px;
+  background: var(--teal-light);
+  color: var(--teal);
+  border: 1px solid #9FE1CB;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.maps-btn:hover { background: #C0EDDA; }
+
+.distance-info {
+  padding: 0 16px 12px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.trip-divider {
+  border-top: 2px dashed var(--border);
+  margin: 12px 16px;
+  padding-top: 12px;
+}
+
+.unassigned {
+  background: var(--red-light);
+  border: 1px solid #F0BEBE;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 16px;
+}
+
+.unassigned h3 { font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+
+.chip {
+  display: inline-block;
+  background: white;
+  border: 1px solid #F0BEBE;
+  color: var(--red);
+  border-radius: 18px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  margin: 3px 4px 3px 0;
+}
+
+.col-headers {
+  display: grid;
+  grid-template-columns: 1fr 130px 36px;
+  gap: 8px;
+  padding: 0 10px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.driver-col-headers {
+  display: grid;
+  grid-template-columns: 1fr 80px 36px;
+  gap: 8px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span style="font-size:22px">🛕</span>
+  <div>
+    <h1>Mandir Lifts Optimizer</h1>
+    <p>Plan optimal carpool routes from Mandir</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Start Destination -->
+  <div class="start-section">
+    <label>📍 Starting Location (Mandir)</label>
+    <input type="text" id="mandirPc" value="NW10 8LD" placeholder="e.g. NW10 8LD" maxlength="10">
+  </div>
+
+  <!-- Two Panels: Kishores & Drivers -->
+  <div class="panels">
+    <!-- Kishores Panel -->
+    <div class="panel">
+      <div class="panel-title"><span class="panel-icon">👦</span> Kishores to drop off</div>
+      <div class="col-headers">
+        <span>Name</span>
+        <span>Postcode</span>
+        <span></span>
+      </div>
+      <div class="list" id="kishoresList"></div>
+      <button class="btn-add" onclick="addKishor()">+ Add kishore</button>
+    </div>
+
+    <!-- Drivers Panel -->
+    <div class="panel">
+      <div class="panel-title"><span class="panel-icon">🚗</span> Drivers</div>
+      <div class="col-headers driver-col-headers">
+        <span>Name</span>
+        <span>Seats</span>
+        <span></span>
+      </div>
+      <div class="list" id="driversList"></div>
+      <button class="btn-add" onclick="addDriver()">+ Add driver</button>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <button class="btn-optimize" id="optimizeBtn" onclick="optimize()">Generate optimal routes</button>
+    <button class="btn-reset" onclick="reset()">Reset all</button>
+  </div>
+
+  <div class="status" id="status">
+    <div class="spinner"></div>
+    <span id="statusText"></span>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsContainer"></div>
+
+</div>
+
+<script>
+let kishores = [], drivers = [];
+let kishorCounter = 0, driverCounter = 0;
+const geoCache = {};
+
+// UK Postcode validation
+function isValidUKPostcode(pc) {
+  const cleaned = pc.trim().toUpperCase().replace(/\s+/g, '');
+  const postcodeRegex = /^[A-Z]{1,2}[0-9]{1,2}[A-Z]?[0-9][A-Z]{2}$/;
+  return postcodeRegex.test(cleaned);
+}
+
+function normalizePostcode(pc) {
+  return pc.trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+function addKishor(name='', postcode='') {
+  const id = ++kishorCounter;
+  kishores.push(id);
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.id = `kishor-${id}`;
+  row.innerHTML = `
+    <input type="text" placeholder="Name" value="${name}" id="kname-${id}">
+    <input type="text" placeholder="Postcode" class="postcode" value="${postcode}" id="kpc-${id}" maxlength="10">
+    <button class="btn-del" onclick="removeKishor(${id})">×</button>
+    <div class="error-msg" id="kerr-${id}"></div>`;
+  document.getElementById('kishoresList').appendChild(row);
+  autoUppercase(document.getElementById(`kpc-${id}`));
+  addPostcodeValidator(id, 'k');
+}
+
+function removeKishor(id) {
+  kishores = kishores.filter(k => k !== id);
+  document.getElementById(`kishor-${id}`)?.remove();
+}
+
+function addDriver(name='', seats='5', homepc='') {
+  const id = ++driverCounter;
+  drivers.push(id);
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.id = `driver-${id}`;
+  row.innerHTML = `
+    <input type="text" placeholder="Name" value="${name}" id="dname-${id}">
+    <select id="dseats-${id}" value="${seats}">
+      ${[2,3,4,5,6,7,8].map(n => `<option value="${n}" ${n == seats ? 'selected' : ''}>${n} seats</option>`).join('')}
+    </select>
+    <button class="btn-del" onclick="removeDriver(${id})">×</button>`;
+  const rowEl = document.getElementById('driversList').appendChild(row);
+  
+  const homeRow = document.createElement('div');
+  homeRow.className = 'row';
+  homeRow.id = `driver-home-${id}`;
+  homeRow.style.marginTop = '-8px';
+  homeRow.innerHTML = `
+    <input type="text" placeholder="Home postcode" class="postcode" value="${homepc}" id="dhome-${id}" maxlength="10">
+    <span></span>
+    <span></span>
+    <div class="error-msg" id="derr-${id}"></div>`;
+  document.getElementById('driversList').appendChild(homeRow);
+  autoUppercase(document.getElementById(`dhome-${id}`));
+  addPostcodeValidator(id, 'd');
+}
+
+function removeDriver(id) {
+  drivers = drivers.filter(d => d !== id);
+  document.getElementById(`driver-${id}`)?.remove();
+  document.getElementById(`driver-home-${id}`)?.remove();
+}
+
+function autoUppercase(input) {
+  input.addEventListener('input', e => {
+    const s = e.target.selectionStart;
+    e.target.value = e.target.value.toUpperCase();
+    e.target.setSelectionRange(s, s);
+  });
+}
+
+function addPostcodeValidator(id, type) {
+  const input = document.getElementById(`${type}pc-${id}`) || document.getElementById(`${type}home-${id}`);
+  const errDiv = document.getElementById(`${type}err-${id}`);
+  const row = input.closest('.row');
+  
+  if (!input || !errDiv) return;
+  
+  input.addEventListener('blur', () => {
+    const pc = input.value.trim();
+    if (pc && !isValidUKPostcode(pc)) {
+      row.classList.add('error');
+      errDiv.textContent = 'Invalid UK postcode';
+    } else {
+      row.classList.remove('error');
+      errDiv.textContent = '';
+    }
+  });
+  
+  input.addEventListener('focus', () => {
+    row.classList.remove('error');
+    errDiv.textContent = '';
+  });
+}
+
+// Setup Mandir postcode
+const mandirInput = document.getElementById('mandirPc');
+autoUppercase(mandirInput);
+
+// Geocoding
+async function geocode(pc) {
+  const key = normalizePostcode(pc);
+  if (geoCache[key]) return geoCache[key];
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(key + ', UK')}&format=json&limit=1&countrycodes=gb`;
+  const r = await fetch(url, { headers: {'Accept-Language':'en'} });
+  const data = await r.json();
+  if (!data.length) throw new Error(`Postcode not found: ${key}`);
+  const coords = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  geoCache[key] = coords;
+  return coords;
+}
+
+function haversine(a, b) {
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLon = (b.lon - a.lon) * Math.PI / 180;
+  const sin2 = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(sin2), Math.sqrt(1-sin2));
+}
+
+function routeDistance(mandirCoords, stops, endCoords) {
+  let total = haversine(mandirCoords, stops[0]?.coords || endCoords);
+  for (let i = 0; i < stops.length - 1; i++) {
+    total += haversine(stops[i].coords, stops[i+1].coords);
+  }
+  if (stops.length > 0) total += haversine(stops[stops.length-1].coords, endCoords);
+  return total;
+}
+
+function nearestNeighbour(mandirCoords, candidates, endCoords) {
+  if (!candidates.length) return [];
+  let remaining = [...candidates];
+  let route = [], current = mandirCoords;
+  
+  while (remaining.length) {
+    let best = null, bestDist = Infinity;
+    for (const c of remaining) {
+      const d = haversine(current, c.coords);
+      if (d < bestDist) { bestDist = d; best = c; }
+    }
+    route.push({ ...best, distFromPrev: Math.round(bestDist * 10) / 10 });
+    current = best.coords;
+    remaining = remaining.filter(c => c !== best);
+  }
+  return route;
+}
+
+function optimizeAssignmentWithMultipleRounds(mandirCoords, kishores, drivers) {
+  const assignment = drivers.map(d => ({ ...d, trips: [[]] }));
+  let unassignedKishores = [...kishores];
+  const totalSeats = drivers.reduce((s, d) => s + d.seats - 1, 0);
+  const needsMultipleRounds = unassignedKishores.length > totalSeats;
+  
+  while (unassignedKishores.length > 0) {
+    let bestDriver = null, bestKishor = null, bestIncrease = Infinity;
+    let bestTripIdx = 0;
+    
+    for (const k of unassignedKishores) {
+      for (let dIdx = 0; dIdx < assignment.length; dIdx++) {
+        const d = assignment[dIdx];
+        const currentTrip = d.trips[d.trips.length - 1];
+        
+        if (currentTrip.length >= d.seats - 1) {
+          if (!needsMultipleRounds) continue;
+          d.trips.push([]);
+        }
+        
+        const testTrip = [...currentTrip, k];
+        const testRoute = nearestNeighbour(mandirCoords, testTrip, mandirCoords);
+        const testDist = routeDistance(mandirCoords, testRoute, mandirCoords);
+        
+        const currentRoute = currentTrip.length > 0 ? nearestNeighbour(mandirCoords, currentTrip, mandirCoords) : [];
+        const currentDist = routeDistance(mandirCoords, currentRoute, mandirCoords);
+        
+        const increase = testDist - currentDist;
+        
+        if (increase < bestIncrease) {
+          bestIncrease = increase;
+          bestDriver = assignment[dIdx];
+          bestKishor = k;
+          bestTripIdx = bestDriver.trips.length - 1;
+        }
+      }
+    }
+    
+    if (bestDriver) {
+      const currentTrip = bestDriver.trips[bestTripIdx];
+      if (currentTrip.length >= bestDriver.seats - 1) {
+        bestDriver.trips.push([bestKishor]);
+      } else {
+        currentTrip.push(bestKishor);
+      }
+      unassignedKishores = unassignedKishores.filter(k => k !== bestKishor);
+    } else {
+      break;
+    }
+  }
+  
+  return { assignment, unassignedKishores };
+}
+
+function setStatus(msg, type = 'loading') {
+  const el = document.getElementById('status');
+  el.className = 'status visible' + (type === 'error' ? ' error' : type === 'success' ? ' success' : '');
+  document.getElementById('statusText').textContent = msg;
+}
+
+function initials(name) {
+  return name.split(/\s+/).map(w => w[0] || '').join('').toUpperCase().slice(0, 2) || '?';
+}
+
+function mapsUrl(mandirCoords, stops, endCoords) {
+  const origin = `${mandirCoords.lat},${mandirCoords.lon}`;
+  const dest = `${endCoords.lat},${endCoords.lon}`;
+  const wps = stops.map(s => `${s.coords.lat},${s.coords.lon}`).join('|');
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}${wps ? '&waypoints=' + wps : ''}&travelmode=driving`;
+}
+
+async function optimize() {
+  const btn = document.getElementById('optimizeBtn');
+  btn.disabled = true;
+  document.getElementById('resultsContainer').innerHTML = '';
+
+  const mandirPc = document.getElementById('mandirPc').value.trim().toUpperCase();
+
+  if (!mandirPc) { setStatus('Enter Mandir postcode', 'error'); btn.disabled = false; return; }
+  if (!isValidUKPostcode(mandirPc)) { setStatus('Invalid Mandir postcode', 'error'); btn.disabled = false; return; }
+
+  const kishoreData = kishores.map(id => ({
+    id,
+    name: (document.getElementById(`kname-${id}`)?.value || '').trim(),
+    postcode: (document.getElementById(`kpc-${id}`)?.value || '').trim().toUpperCase()
+  })).filter(k => k.name && k.postcode);
+
+  let invalidKishores = [];
+  for (const k of kishoreData) {
+    if (!isValidUKPostcode(k.postcode)) {
+      invalidKishores.push(k.name);
+    }
+  }
+  if (invalidKishores.length > 0) {
+    setStatus(`Invalid postcodes: ${invalidKishores.join(', ')}`, 'error');
+    btn.disabled = false;
+    return;
+  }
+
+  const driverData = drivers.map(id => ({
+    id,
+    name: (document.getElementById(`dname-${id}`)?.value || '').trim(),
+    seats: parseInt(document.getElementById(`dseats-${id}`)?.value || '5', 10),
+    homepc: (document.getElementById(`dhome-${id}`)?.value || '').trim().toUpperCase()
+  })).filter(d => d.name && d.homepc);
+
+  let invalidDrivers = [];
+  for (const d of driverData) {
+    if (!isValidUKPostcode(d.homepc)) {
+      invalidDrivers.push(d.name);
+    }
+  }
+  if (invalidDrivers.length > 0) {
+    setStatus(`Invalid driver postcodes: ${invalidDrivers.join(', ')}`, 'error');
+    btn.disabled = false;
+    return;
+  }
+
+  if (!kishoreData.length) { setStatus('Add at least one kishore', 'error'); btn.disabled = false; return; }
+  if (!driverData.length) { setStatus('Add at least one driver', 'error'); btn.disabled = false; return; }
+
+  try {
+    const allPcs = [...new Set([mandirPc, ...kishoreData.map(k => k.postcode), ...driverData.map(d => d.homepc)])];
+    
+    for (let i = 0; i < allPcs.length; i++) {
+      setStatus(`Geocoding ${i+1}/${allPcs.length}: ${allPcs[i]}…`);
+      await geocode(allPcs[i]);
+      if (i < allPcs.length - 1) await new Promise(r => setTimeout(r, 250));
+    }
+
+    const mandirCoords = geoCache[normalizePostcode(mandirPc)];
+
+    for (const k of kishoreData) k.coords = geoCache[normalizePostcode(k.postcode)];
+    for (const d of driverData) d.endCoords = geoCache[normalizePostcode(d.homepc)];
+
+    setStatus('Optimizing routes…');
+    const { assignment, unassignedKishores } = optimizeAssignmentWithMultipleRounds(mandirCoords, kishoreData, driverData);
+
+    setStatus(`✓ Routes optimized`, 'success');
+    renderResults(mandirCoords, assignment, unassignedKishores, kishoreData.length);
+
+  } catch(e) {
+    setStatus(e.message, 'error');
+  }
+
+  btn.disabled = false;
+}
+
+function renderResults(mandirCoords, assignment, unassignedKishores, totalKishores) {
+  const el = document.getElementById('resultsContainer');
+
+  const totalAssigned = assignment.reduce((s, d) => s + d.trips.reduce((ts, t) => ts + t.length, 0), 0);
+  
+  // Get drivers doing multiple trips
+  const multiTripDrivers = assignment.filter(d => d.trips.filter(t => t.length).length > 1);
+  const multiTripText = multiTripDrivers.map(d => `${d.name} does ${d.trips.filter(t => t.length).length} trips`).join(', ');
+
+  // Build remainder text
+  let remainderStat = `<strong>${unassignedKishores.length}</strong> still need rides`;
+  if (multiTripDrivers.length > 0) {
+    remainderStat += ` - ${multiTripText}`;
+  }
+
+  let html = `
+    <div class="results">
+      <div class="results-title">📍 Optimized Routes</div>
+      <div class="summary-stats">
+        <div class="stat"><strong>${totalAssigned}</strong> kishores assigned</div>
+        <div class="stat"><strong>${assignment.filter(d => d.trips.some(t => t.length)).length}</strong> active drivers</div>
+        <div class="stat">${remainderStat}</div>
+      </div>
+      <div class="routes-grid">`;
+
+  for (const driver of assignment) {
+    const hasTrips = driver.trips.some(t => t.length > 0);
+    if (!hasTrips) continue;
+
+    html += `<div class="driver-card">
+      <div class="driver-header">
+        <div class="avatar">${initials(driver.name)}</div>
+        <div class="driver-info">
+          <div class="driver-name">${driver.name}</div>
+          <div class="driver-home">🏠 ${driver.homepc}</div>
+        </div>
+      </div>`;
+
+    // Render each trip
+    driver.trips.forEach((trip, tripIdx) => {
+      if (!trip.length) return;
+
+      if (tripIdx > 0) {
+        html += `<div class="trip-divider"></div>`;
+      }
+
+      if (driver.trips.filter(t => t.length).length > 1) {
+        html += `<div class="trip-label">Trip ${tripIdx + 1}</div>`;
+      }
+
+      // For intermediate trips, go back to Mandir. For last trip, go to driver's home.
+      const isLastTrip = tripIdx === driver.trips.filter(t => t.length).length - 1;
+      const tripEndCoords = isLastTrip ? driver.endCoords : mandirCoords;
+      
+      const orderedStops = nearestNeighbour(mandirCoords, trip, tripEndCoords);
+      const totalDist = routeDistance(mandirCoords, orderedStops, tripEndCoords);
+      const mapsLink = mapsUrl(mandirCoords, orderedStops, tripEndCoords);
+
+      html += `<div class="stops">
+        <div class="stop">
+          <div class="stop-num stop-start">🛕</div>
+          <div class="stop-text">
+            <div class="stop-name">Mandir (Start)</div>
+          </div>
+        </div>`;
+
+      orderedStops.forEach((s, i) => {
+        html += `
+          <div class="stop">
+            <div class="stop-num">${i+1}</div>
+            <div class="stop-text">
+              <div class="stop-name">${s.name}</div>
+              <div class="stop-pc">${s.postcode}</div>
+            </div>
+          </div>`;
+      });
+
+      const endLabel = isLastTrip ? '🏠 Home' : '🛕 Mandir (Return)';
+      const endPc = isLastTrip ? driver.homepc : 'NW10 8LD';
+      
+      html += `
+        <div class="stop">
+          <div class="stop-num stop-end">${isLastTrip ? '🏠' : '🛕'}</div>
+          <div class="stop-text">
+            <div class="stop-name">${endLabel}</div>
+            <div class="stop-pc">${endPc}</div>
+          </div>
+        </div>
+      </div>`;
+
+      html += `<a class="maps-btn" href="${mapsLink}" target="_blank">🗺 Open in Google Maps</a>`;
+      html += `<div class="distance-info">${trip.length}/${driver.seats - 1} seats · ${Math.round(totalDist * 10) / 10} km</div>`;
+    });
+
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+
+  if (unassignedKishores.length) {
+    html += `
+      <div class="unassigned">
+        <h3>⚠ Remainder (${unassignedKishores.length} kishores)</h3>
+        <p style="font-size: 12px; color: var(--ink-3); margin-bottom: 8px;">These kishores still need rides. Add another driver to accommodate them.</p>`;
+    unassignedKishores.forEach(k => {
+      html += `<span class="chip">${k.name} — ${k.postcode}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+
+  el.innerHTML = html;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function reset() {
+  kishores = [];
+  drivers = [];
+  kishorCounter = 0;
+  driverCounter = 0;
+  document.getElementById('kishoresList').innerHTML = '';
+  document.getElementById('driversList').innerHTML = '';
+  document.getElementById('resultsContainer').innerHTML = '';
+  document.getElementById('status').className = 'status';
+}
+</script>
+</body>
+</html>
